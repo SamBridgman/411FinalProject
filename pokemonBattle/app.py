@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from getMon import getPokemon
 
 app = Flask(__name__)
 
@@ -54,7 +55,31 @@ def dashboard():
         return redirect(url_for('home'))
 
     return render_template('index.html', username=user.username, wins=user.wins)
-    
+
+@app.route('/get-pokemon', methods=['POST'])
+def get_pokemon():
+    pokemon_name = request.form.get('pokemon')  
+    if not pokemon_name:
+        flash("Please enter a Pokémon name.")
+        return redirect(url_for('dashboard'))
+
+    # Fetch Pokémon data using the `getStats` function
+    response = getPokemon(pokemon_name.lower())  
+    if response.status_code != 200:
+        flash("Pokémon not found. Please try again.")
+        return redirect(url_for('dashboard'))
+
+    # Decode and unpack the JSON response
+    data = response.json()
+    pokemon_stats = {stat['stat']['name']: stat['base_stat'] for stat in data['stats']}
+    pokemon_sprite = data['sprites']['front_default']
+
+    # Pass data to the template for rendering
+    return render_template('index.html', 
+                           username=session.get('username'), 
+                           wins=User.query.filter_by(username=session.get('username')).first().wins, 
+                           pokemon_stats=pokemon_stats, 
+                           pokemon_sprite=pokemon_sprite)
 
     
 #LOGIN FORM LOGIC
