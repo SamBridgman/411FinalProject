@@ -30,6 +30,25 @@
         </div>
       </div>
 
+      <!-- Enemy Pokémon Section -->
+      <div class="row my-4">
+        <div class="col">
+          <h3>Enemy Pokémon</h3>
+          {% if enemy_pokemon_name %}
+          <p><strong>Name:</strong> {{ enemy_pokemon_name }}</p>
+          <p><strong>Stats:</strong></p>
+          <ul>
+            {% for stat, value in enemy_pokemon_stats.items() %}
+            <li>{{ stat }}: {{ value }}</li>
+            {% endfor %}
+          </ul>
+          <img src="{{ enemy_pokemon_sprite }}" alt="Enemy Pokémon Sprite" />
+          {% else %}
+          <p>No Pokémon selected yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
       <!-- User Pokémon Section -->
       <div class="row my-4">
         <div class="col">
@@ -66,6 +85,17 @@
               />
             </div>
             <button type="submit" class="btn btn-primary">Get Pokémon</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Button to fetch a random enemy Pokémon -->
+      <div class="row my-4">
+        <div class="col text-center">
+          <form action="/get-enemy-pokemon" method="POST">
+            <button type="submit" class="btn btn-secondary">
+              Generate Enemy Pokémon
+            </button>
           </form>
         </div>
       </div>
