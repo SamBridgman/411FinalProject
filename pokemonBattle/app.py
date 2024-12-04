@@ -61,8 +61,7 @@ def dashboard():
 def get_pokemon():
     pokemon_name = request.form.get('pokemon')  
     if not pokemon_name:
-        flash("Please enter a Pokémon name.")
-        return redirect(url_for('dashboard'))
+        return jsonify({'error': 'Please enter a Pokémon name.'}), 400
 
     # Fetch Pokémon data using the `getStats` function
     response = getPokemon(pokemon_name.lower())  
@@ -76,19 +75,17 @@ def get_pokemon():
     pokemon_sprite = data['sprites']['front_default']
 
     # Pass data to the template for rendering
-    return render_template('index.html', 
-                           username=session.get('username'), 
-                           wins=User.query.filter_by(username=session.get('username')).first().wins, 
-                           pokemon_stats=pokemon_stats, 
-                           pokemon_sprite=pokemon_sprite)
+    return jsonify({
+        'pokemon_stats': pokemon_stats,
+        'pokemon_sprite': pokemon_sprite
+    })
 
 @app.route('/get-enemy-pokemon', methods=['POST'])
 def get_enemy_pokemon():
-    # Fetch Pokémon data using the `getRandomMon` function
+    # Fetch random Pokémon data
     response = getRandomMon()  
     if response.status_code != 200:
-        flash("Failed to fetch an enemy Pokémon. Please try again.")
-        return redirect(url_for('dashboard'))
+        return jsonify({'error': 'Failed to fetch an enemy Pokémon. Please try again.'}), 500
 
     # Decode and unpack the JSON response
     data = response.json()
@@ -96,13 +93,12 @@ def get_enemy_pokemon():
     enemy_pokemon_stats = {stat['stat']['name']: stat['base_stat'] for stat in data['stats']}
     enemy_pokemon_sprite = data['sprites']['front_default']
 
-    # Pass enemy Pokémon data to the template for rendering
-    return render_template('index.html', 
-                           username=session.get('username'), 
-                           wins=User.query.filter_by(username=session.get('username')).first().wins, 
-                           enemy_pokemon_name=enemy_pokemon_name, 
-                           enemy_pokemon_stats=enemy_pokemon_stats, 
-                           enemy_pokemon_sprite=enemy_pokemon_sprite)
+    # Return data as JSON
+    return jsonify({
+        'enemy_pokemon_name': enemy_pokemon_name,
+        'enemy_pokemon_stats': enemy_pokemon_stats,
+        'enemy_pokemon_sprite': enemy_pokemon_sprite
+    })
 
     
 #LOGIN FORM LOGIC
