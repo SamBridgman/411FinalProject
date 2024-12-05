@@ -78,12 +78,73 @@
       <!-- Start Battle Section -->
       <div class="row my-4">
         <div class="col text-center">
-          <form action="/start-battle" method="POST">
+          <form id="battle-form" onsubmit="startBattle(event)">
+            <input type="hidden" id="user-pokemon-name" name="user_pokemon_name" />
+            <input type="hidden" id="enemy-pokemon-name" name="enemy_pokemon_name" />
             <button type="submit" class="btn btn-danger">Start Battle</button>
           </form>
         </div>
       </div>
+
+        <!-- Winner Section -->
+    <div class="row my-4">
+        <div class="col text-center">
+        <h3>Battle Winner</h3>
+        <div id="battle-winner">
+            <p>No battle yet.</p>
+        </div>
+        </div>
     </div>
+      
+    <script>
+        async function startBattle(event) {
+            event.preventDefault(); // Prevent default form submission
+          
+            // Get Pokémon names from their respective sections
+            const userPokemonName = document
+              .querySelector("#user-pokemon p strong")
+              .nextSibling.nodeValue.trim();
+            const enemyPokemonName = document
+              .querySelector("#enemy-pokemon p strong")
+              .nextSibling.nodeValue.trim();
+          
+            // Pass Pokémon names to hidden inputs
+            document.getElementById("user-pokemon-name").value = userPokemonName;
+            document.getElementById("enemy-pokemon-name").value = enemyPokemonName;
+          
+            // Submit the form via fetch
+            const formData = new FormData(document.getElementById("battle-form"));
+            const response = await fetch("/start-battle", {
+              method: "POST",
+              body: formData,
+            });
+          
+            const data = await response.json();
+          
+            if (response.ok) {
+              // Populate the Winner Section
+              const winnerSection = document.getElementById("battle-winner");
+              if (data.winner === "User") {
+                winnerSection.innerHTML = `
+                  <p><strong>Winner:</strong> ${document.getElementById("user-pokemon-name").value}</p>
+                  <img src="${document.querySelector('#user-pokemon img').src}" alt="Winner Sprite" />
+                `;
+              } else if (data.winner === "Enemy") {
+                winnerSection.innerHTML = `
+                  <p><strong>Winner:</strong> ${document.getElementById("enemy-pokemon-name").value}</p>
+                  <img src="${document.querySelector('#enemy-pokemon img').src}" alt="Winner Sprite" />
+                `;
+              } else {
+                winnerSection.innerHTML = `
+                  <p><strong>Result:</strong> It's a Draw!</p>
+                `;
+              }
+            } else {
+              alert(data.error);
+            }
+          }
+    </script>
+
     <script>
       async function fetchPokemon(event, url, isEnemy = false) {
         event.preventDefault(); // Prevent the default form submission
@@ -114,6 +175,7 @@
           } else {
             // Update User Pokémon section
             document.getElementById("user-pokemon").innerHTML = `
+                <p><strong>Name:</strong> ${data.pokemon_name}</p>
                 <p><strong>Stats:</strong></p>
                 <ul>
                   ${Object.entries(data.pokemon_stats)

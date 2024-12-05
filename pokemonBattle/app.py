@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from getMon import getPokemon
 from getMon import getRandomMon
+from battle import PokemonBattle
 
 app = Flask(__name__)
 
@@ -76,6 +77,7 @@ def get_pokemon():
 
     # Pass data to the template for rendering
     return jsonify({
+        'pokemon_name': data['name'].capitalize(),
         'pokemon_stats': pokemon_stats,
         'pokemon_sprite': pokemon_sprite
     })
@@ -99,6 +101,26 @@ def get_enemy_pokemon():
         'enemy_pokemon_stats': enemy_pokemon_stats,
         'enemy_pokemon_sprite': enemy_pokemon_sprite
     })
+
+
+@app.route('/start-battle', methods=['POST'])
+def start_battle():
+    # Retrieve Pokémon names from the frontend
+    user_pokemon_name = request.form.get('user_pokemon_name')
+    enemy_pokemon_name = request.form.get('enemy_pokemon_name')
+
+    # Perform a basic check to ensure both Pokémon are provided
+    if not user_pokemon_name or not enemy_pokemon_name:
+        return jsonify({'error': 'Both Pokémon must be selected to start a battle.'}), 400
+
+    # Fetch Pokémon data using the provided names
+    winner = PokemonBattle(user_pokemon_name, enemy_pokemon_name)
+
+    # Return battle result as JSON
+    return jsonify({
+        'winner': winner
+    })
+
 
     
 #LOGIN FORM LOGIC
