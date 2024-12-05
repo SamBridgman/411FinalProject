@@ -100,13 +100,18 @@
         async function startBattle(event) {
             event.preventDefault(); // Prevent default form submission
           
-            // Get Pokémon names from their respective sections
-            const userPokemonName = document
-              .querySelector("#user-pokemon p strong")
-              .nextSibling.nodeValue.trim();
-            const enemyPokemonName = document
-              .querySelector("#enemy-pokemon p strong")
-              .nextSibling.nodeValue.trim();
+            // Check if Pokémon are selected
+            const userNameElement = document.getElementById("user-pokemon-name-display");
+            const enemyNameElement = document.getElementById("enemy-pokemon-name-display");
+          
+            if (!userNameElement || !enemyNameElement) {
+              alert("Both Pokémon must be selected before starting the battle!");
+              return;
+            }
+          
+            // Get Pokémon names from the elements
+            const userPokemonName = userNameElement.textContent.trim();
+            const enemyPokemonName = enemyNameElement.textContent.trim();
           
             // Pass Pokémon names to hidden inputs
             document.getElementById("user-pokemon-name").value = userPokemonName;
@@ -126,12 +131,12 @@
               const winnerSection = document.getElementById("battle-winner");
               if (data.winner === "User") {
                 winnerSection.innerHTML = `
-                  <p><strong>Winner:</strong> ${document.getElementById("user-pokemon-name").value}</p>
+                  <p><strong>Winner:</strong> ${userPokemonName}</p>
                   <img src="${document.querySelector('#user-pokemon img').src}" alt="Winner Sprite" />
                 `;
               } else if (data.winner === "Enemy") {
                 winnerSection.innerHTML = `
-                  <p><strong>Winner:</strong> ${document.getElementById("enemy-pokemon-name").value}</p>
+                  <p><strong>Winner:</strong> ${enemyPokemonName}</p>
                   <img src="${document.querySelector('#enemy-pokemon img').src}" alt="Winner Sprite" />
                 `;
               } else {
@@ -142,53 +147,50 @@
             } else {
               alert(data.error);
             }
-          }
+          }          
     </script>
 
     <script>
-      async function fetchPokemon(event, url, isEnemy = false) {
-        event.preventDefault(); // Prevent the default form submission
-
-        const formData = new FormData(event.target);
-        const response = await fetch(url, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          if (isEnemy) {
-            // Update Enemy Pokémon section
-            document.getElementById("enemy-pokemon").innerHTML = `
-                <p><strong>Name:</strong> ${data.enemy_pokemon_name}</p>
-                <p><strong>Stats:</strong></p>
-                <ul>
-                  ${Object.entries(data.enemy_pokemon_stats)
-                    .map(([stat, value]) => `<li>${stat}: ${value}</li>`)
-                    .join("")}
-                </ul>
-                <img src="${
-                  data.enemy_pokemon_sprite
-                }" alt="Enemy Pokémon Sprite" />
-              `;
-          } else {
-            // Update User Pokémon section
-            document.getElementById("user-pokemon").innerHTML = `
-                <p><strong>Name:</strong> ${data.pokemon_name}</p>
-                <p><strong>Stats:</strong></p>
-                <ul>
-                  ${Object.entries(data.pokemon_stats)
-                    .map(([stat, value]) => `<li>${stat}: ${value}</li>`)
-                    .join("")}
-                </ul>
-                <img src="${data.pokemon_sprite}" alt="Pokémon Sprite" />
-              `;
+        async function fetchPokemon(event, url, isEnemy = false) {
+            event.preventDefault(); // Prevent the default form submission
+            const formData = new FormData(event.target);
+            const response = await fetch(url, {
+              method: "POST",
+              body: formData,
+            });
+          
+            const data = await response.json();
+          
+            if (response.ok) {
+              if (isEnemy) {
+                // Update Enemy Pokémon section with ID for the name
+                document.getElementById("enemy-pokemon").innerHTML = `
+                  <p><strong>Name:</strong> <span id="enemy-pokemon-name-display">${data.enemy_pokemon_name}</span></p>
+                  <p><strong>Stats:</strong></p>
+                  <ul>
+                    ${Object.entries(data.enemy_pokemon_stats)
+                      .map(([stat, value]) => `<li>${stat}: ${value}</li>`)
+                      .join("")}
+                  </ul>
+                  <img src="${data.enemy_pokemon_sprite}" alt="Enemy Pokémon Sprite" />
+                `;
+              } else {
+                // Update User Pokémon section with ID for the name
+                document.getElementById("user-pokemon").innerHTML = `
+                  <p><strong>Name:</strong> <span id="user-pokemon-name-display">${data.pokemon_name}</span></p>
+                  <p><strong>Stats:</strong></p>
+                  <ul>
+                    ${Object.entries(data.pokemon_stats)
+                      .map(([stat, value]) => `<li>${stat}: ${value}</li>`)
+                      .join("")}
+                  </ul>
+                  <img src="${data.pokemon_sprite}" alt="Pokémon Sprite" />
+                `;
+              }
+            } else {
+              alert(data.error); // Show error message
+            }
           }
-        } else {
-          alert(data.error); // Show error message
-        }
-      }
     </script>
   </body>
 </html>

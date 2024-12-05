@@ -3,8 +3,10 @@ import random
 BASE_URL = "https://pokeapi.co/api/v2/"
 
 def getPokemon(pokemon):
-    url = BASE_URL + 'pokemon/' + pokemon 
+    url = BASE_URL + 'pokemon/' + pokemon.lower() 
     response = requests.get(url, stream=True, timeout=120)
+    if response.status_code != 200:
+        raise Exception(f"Failed to get data for {pokemon}: Status code {response.status_code}")
     return response
 
 def getRandomMon():

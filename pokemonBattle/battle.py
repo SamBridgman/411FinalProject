@@ -40,6 +40,8 @@ def PokemonBattle(user_mon, enemy_mon):
         
 def getStats(pokemon):
     Resp = getPokemon(pokemon)
+    if Resp.status_code != 200:
+        raise Exception(f"Failed to get stats for {pokemon}: Status code {Resp.status_code}")
     Data = Resp.json()
     return {stat['stat']['name']: stat['base_stat'] for stat in Data['stats']}
 
@@ -99,4 +101,3 @@ def getBestDamageMultiplier(attackingTypesInfo, defendingTypesInfo):
                     best_multiplier = max(best_multiplier, multiplier)
 
     return best_multiplier
-    
