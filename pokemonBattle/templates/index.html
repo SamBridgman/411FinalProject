@@ -144,6 +144,10 @@
                   <p><strong>Result:</strong> It's a Draw!</p>
                 `;
               }
+              if (data.wins !== undefined) {
+                const winsDisplay = document.getElementById("wins-display");
+                winsDisplay.textContent = data.wins;
+            }
             } else {
               alert(data.error);
             }
