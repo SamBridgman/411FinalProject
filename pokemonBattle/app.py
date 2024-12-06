@@ -115,6 +115,12 @@ def start_battle():
 
     # Fetch Pokémon data using the provided names
     winner = PokemonBattle(user_pokemon_name, enemy_pokemon_name)
+    username= session.get('username')
+    user = User.query.filter_by(username=username).first()
+    
+    if winner == 'User':
+        user.wins = user.wins + 1
+    db.session.commit()
 
     # Return battle result as JSON
     return jsonify({
