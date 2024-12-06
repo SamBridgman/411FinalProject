@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from pokemonBattle.getMon import getPokemon
-from pokemonBattle.getMon import getRandomMon
-from pokemonBattle.battle import PokemonBattle
+import os
+from getMon import *
+
+
 
 app = Flask(__name__)
 
@@ -21,9 +22,11 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     wins = db.Column(db.Integer, default=0)  
+    salt = db.Column(db.String(200))
 
     def __repr__(self):
         return f"<User {self.username}>"
+
 
 #TO SERVE THE FRONT END
 
@@ -115,10 +118,17 @@ def start_battle():
 
     # Fetch Pokémon data using the provided names
     winner = PokemonBattle(user_pokemon_name, enemy_pokemon_name)
+    username= session.get('username')
+    user = User.query.filter_by(username=username).first()
+    
+    if winner == 'User':
+        user.wins = user.wins + 1
+    db.session.commit()
 
     # Return battle result as JSON
     return jsonify({
-        'winner': winner
+        'winner': winner,
+        'wins': user.wins
     })
 
 
@@ -147,8 +157,10 @@ def register():
             return redirect(url_for("signup"))
 
         # Hash the password and save the new user
-        hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
-        new_user = User(username=username, password_hash=hashed_password, wins=0)  # Set wins to 0
+        salt = str(os.urandom(16))
+
+        hashed_password = bcrypt.generate_password_hash(password + salt).decode("utf-8")
+        new_user = User(username=username, password_hash=hashed_password, wins=0, salt=salt)  # Set wins to 0
         db.session.add(new_user)
         db.session.commit()
 
@@ -173,8 +185,16 @@ def login():
     # Find the user in the database
     user = User.query.filter_by(username=username).first()
 
-    # Check if user exists and password matches
-    if user and bcrypt.check_password_hash(user.password_hash, password):
+    if not user:
+        flash("Invalid username or password")
+        return redirect(url_for('home'))
+
+    # Retrieve the salt for the user from the database
+    salt = user.salt
+
+    # Combine the provided password with the user's salt and verify the hash
+    salted_password = password + salt
+    if bcrypt.check_password_hash(user.password_hash, salted_password):
         session['username'] = username  # Save the username in the session
         flash("Login successful!")
         return redirect(url_for('dashboard'))
@@ -182,15 +202,14 @@ def login():
     flash("Invalid username or password")
     return redirect(url_for('home'))  # Redirect back to the login page
 
-#for update password
 @app.route('/update-password', methods=['POST'])
 def update_password():
-    # Handle JSON data
-    if request.content_type == "application/json":
+    # Handle JSON or form data
+    if request.content_type == "application/json":  # JSON request
         data = request.get_json()
         username = data.get('username')
         new_password = data.get('new_password')
-    else:  # Handle form data
+    else:  # Form submission
         username = request.form.get('username')
         new_password = request.form.get('new_password')
 
@@ -202,19 +221,22 @@ def update_password():
             return jsonify({'error': 'User not found'}), 404
         else:
             flash("User not found")
-            return redirect(url_for('forgotpassword'))
+            return redirect(url_for('forgotpassword'))  # Redirect back to the forgot password page
 
-    # Hash and update the new password
-    user.password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+    # Use the existing salt to hash the new password
+    salt = user.salt
+    salted_password = new_password + salt
+    hashed_password = bcrypt.generate_password_hash(salted_password).decode('utf-8')
+
+    # Update the password hash in the database
+    user.password_hash = hashed_password
     db.session.commit()
 
-    # Redirect to the login page for form submissions
     if request.content_type == "application/json":
-        return jsonify({'message': 'Password updated successfully. Please login again.'}), 200
+        return jsonify({'message': 'Password updated successfully'}), 200
     else:
-        flash("Password updated successfully. Please login again.")
-        return redirect(url_for('home'))  #back to login
-
+        flash("Password updated successfully! Please log in.")
+        return redirect(url_for('home'))  # Redirect to the login page
 
 #main
 if __name__ == "__main__":
