@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from getMon import getPokemon
-from getMon import getRandomMon
-from battle import PokemonBattle
+from pokemonBattle.getMon import getPokemon
+from pokemonBattle.getMon import getRandomMon
+from pokemonBattle.battle import PokemonBattle
 
 app = Flask(__name__)
 

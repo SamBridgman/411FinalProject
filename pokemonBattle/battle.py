@@ -1,4 +1,4 @@
-from getMon import getPokemon
+from pokemonBattle.getMon import getPokemon
 import requests
 
 def PokemonBattle(user_mon, enemy_mon):
