@@ -124,7 +124,8 @@ def start_battle():
 
     # Return battle result as JSON
     return jsonify({
-        'winner': winner
+        'winner': winner,
+        'wins': user.wins
     })
 
 

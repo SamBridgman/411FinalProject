@@ -18,7 +18,7 @@
         <div class="col">
           <h3>Your Info</h3>
           <p><strong>Username:</strong> {{ username }}</p>
-          <p><strong>Wins:</strong> {{ wins }}</p>
+          <p><strong>Wins:</strong> <span id="wins-display">{{ wins }}</p>
         </div>
       </div>
 
@@ -144,6 +144,10 @@
                   <p><strong>Result:</strong> It's a Draw!</p>
                 `;
               }
+              if (data.wins !== undefined) {
+                const winsDisplay = document.getElementById("wins-display");
+                winsDisplay.textContent = data.wins;
+            }
             } else {
               alert(data.error);
             }
