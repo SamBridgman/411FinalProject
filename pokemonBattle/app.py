@@ -3,8 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import logging
 import os
-from getMon import *
-from battle import *
+from pokemonBattle.getMon import *
+from pokemonBattle.battle import *
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
