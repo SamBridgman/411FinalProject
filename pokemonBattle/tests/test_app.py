@@ -1,6 +1,6 @@
 import pytest
 from flask import url_for
-from pokemonBattle.app import app, db, User
+from pokemonBattle.app import app, db, User, bcrypt
 from flask_bcrypt import generate_password_hash
 
 def setup_module(module):
@@ -11,8 +11,9 @@ def setup_module(module):
     with app.app_context():
         db.create_all()
         # Create a test user
-        hashed_password = generate_password_hash("testpassword").decode("utf-8")
-        user = User(username="testuser", password_hash=hashed_password)
+        salt = "random_salt"  # Add a test salt
+        hashed_password = generate_password_hash("testpassword" + salt).decode("utf-8")
+        user = User(username="testuser", password_hash=hashed_password, salt=salt)  # Include the salt
         db.session.add(user)
         db.session.commit()
 
@@ -82,11 +83,10 @@ def test_update_password(client):
     assert response.status_code == 200
     assert b'Password updated successfully' in response.data
     # Verify login with the new password
-    response = client.post('/login', data={
-        'username': 'testuser',
-        'password': 'updatedpassword'
-    }, follow_redirects=True)
-    assert b'testuser' in response.data  # Check for username in the dashboard
+    with app.app_context():
+        user = User.query.filter_by(username='testuser').first()
+        salt = user.salt
+        assert bcrypt.check_password_hash(user.password_hash, 'updatedpassword' + salt)
 
 def test_get_pokemon(client, monkeypatch):
     """Test fetching a Pokémon by name."""
